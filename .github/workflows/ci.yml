@@ -1,0 +1,45 @@
+name: '🎡 CI'
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+  schedule:
+    - cron: '22 2 * * 4'
+
+jobs:
+  ci:
+    name: '🎡 CI'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📚 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org/
+
+      - name: 📦 Install dependencies
+        run: yarn
+
+      - name: 💄 Run lint
+        run: yarn lint
+
+      - name: 📊 Generate typescript code coverage
+        id: ts-cov
+        uses: kamack38/type-coverage@main
+        with:
+          ignoreFiles: |
+            .next/**
+
+      - name: 📝 Set action summary
+        run: echo "${{ steps.ts-cov.outputs.markdown }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: 🚧 Run if is PR
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "This is PR"
